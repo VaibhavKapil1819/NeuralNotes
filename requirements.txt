@@ -1,0 +1,170 @@
+# ============================================================
+# NeuralNotes — AI Meeting Intelligence Platform
+# Requirements File
+# ============================================================
+# Python Version: 3.13+
+# Last Updated: February 18, 2026
+# Maintainer: Vaibhav
+#
+# INSTALL COMMAND (just one command, that's it):
+#   pip install -r requirements.txt
+#
+# SECTIONS:
+#   1. Build Tools (fixes Python 3.13 compatibility)
+#   2. Web Framework & API
+#   3. AI & Machine Learning
+#   4. Audio Processing
+#   5. Database & Storage
+#   6. Authentication & Security
+#   7. Integrations & Notifications
+#   8. Frontend
+#   9. Utilities & Helpers
+#  10. Logging & Monitoring
+#  11. Development & Testing
+# ============================================================
+
+
+# ------------------------------------------------------------
+# 1. BUILD TOOLS
+# Must come first — fixes Python 3.13 pkg_resources errors
+# ------------------------------------------------------------
+setuptools>=75.0.0             # Replaces pkg_resources (removed in Python 3.13)
+wheel>=0.45.0                  # Required for building packages from source
+
+
+# ------------------------------------------------------------
+# 2. WEB FRAMEWORK & API
+# FastAPI powers our REST API backend
+# ------------------------------------------------------------
+fastapi==0.115.6               # Modern async Python web framework
+uvicorn[standard]==0.32.1      # ASGI server to run FastAPI
+python-multipart==0.0.20       # Required for file uploads in FastAPI
+pydantic==2.10.4               # Data validation and serialization
+pydantic-settings==2.7.0       # Settings management via .env files
+httpx==0.28.1                  # Async HTTP client (used internally)
+starlette==0.41.3              # FastAPI's underlying ASGI toolkit
+
+
+# ------------------------------------------------------------
+# 3. AI & MACHINE LEARNING
+# The intelligence core of NeuralNotes
+# ------------------------------------------------------------
+openai==1.59.3                                          # Whisper API + GPT fallback
+anthropic==0.42.0                                       # Claude API for summarization & Q&A
+git+https://github.com/openai/whisper.git               # Whisper — source install (Python 3.13 fix)
+torch==2.6.0                                            # PyTorch — required by Whisper & pyannote
+torchaudio==2.6.0                                       # Audio processing for PyTorch models
+transformers==4.47.1                                    # Hugging Face transformers (model backbone)
+pyannote.audio==3.3.2                                   # Speaker diarization (who said what)
+chromadb==0.6.3                                         # Vector database for RAG Q&A
+sentence-transformers==3.3.1                            # Generate text embeddings for ChromaDB
+tiktoken==0.8.0                                         # Token counting for Claude/GPT API calls
+langchain==0.3.14                                       # LLM orchestration framework
+langchain-anthropic==0.3.3                              # LangChain integration with Claude
+langchain-community==0.3.14                             # LangChain community tools & loaders
+
+
+# ------------------------------------------------------------
+# 4. AUDIO PROCESSING
+# Handle all audio formats, conversion, and chunking
+# ------------------------------------------------------------
+pydub==0.25.1                  # Audio manipulation (split, convert, merge)
+ffmpeg-python==0.2.0           # Python wrapper for ffmpeg
+librosa==0.10.2                # Audio analysis and feature extraction
+soundfile==0.12.1              # Read/write audio files (WAV, FLAC, etc.)
+numpy==2.0.2                   # Numerical computing (audio arrays)
+
+
+# ------------------------------------------------------------
+# 5. DATABASE & STORAGE
+# Firebase Firestore as our cloud database
+# ------------------------------------------------------------
+firebase-admin==6.6.0          # Firebase Admin SDK (Firestore + Auth + Storage)
+google-cloud-firestore==2.19.0 # Firestore client library
+google-cloud-storage==2.19.0   # Firebase Storage for audio files
+google-auth==2.37.0            # Google authentication for Firebase
+
+
+# ------------------------------------------------------------
+# 6. AUTHENTICATION & SECURITY
+# JWT validation, password hashing, API security
+# ------------------------------------------------------------
+python-jose[cryptography]==3.3.0  # JWT token creation and validation
+passlib[bcrypt]==1.7.4            # Password hashing (bcrypt algorithm)
+bcrypt==4.2.1                     # Bcrypt dependency for passlib
+cryptography==44.0.0              # Core cryptography library
+python-dotenv==1.0.1              # Load .env files into environment variables
+
+
+# ------------------------------------------------------------
+# 7. INTEGRATIONS & NOTIFICATIONS
+# Email, Slack, and external service integrations
+# ------------------------------------------------------------
+sendgrid==6.11.0                   # SendGrid email API for meeting summaries
+slack-sdk==3.34.0                  # Slack API for channel notifications
+jinja2==3.1.5                      # HTML email template rendering
+aiosmtplib==3.0.2                  # Async SMTP (fallback email option)
+google-api-python-client==2.155.0  # Google Calendar integration
+google-auth-httplib2==0.2.0        # Google Auth for Calendar API
+google-auth-oauthlib==1.2.1        # OAuth2 flow for Google services
+
+
+# ------------------------------------------------------------
+# 8. FRONTEND
+# Streamlit for our web dashboard UI
+# ------------------------------------------------------------
+streamlit==1.41.1              # Web UI framework (Python-only frontend)
+streamlit-authenticator==0.4.1 # Authentication component for Streamlit
+plotly==5.24.1                 # Interactive charts for meeting analytics
+pandas==2.2.3                  # Data manipulation for analytics dashboard
+altair==5.5.0                  # Declarative visualization library
+
+
+# ------------------------------------------------------------
+# 9. UTILITIES & HELPERS
+# General purpose libraries used across the project
+# ------------------------------------------------------------
+python-dateutil==2.9.0         # Date parsing and manipulation
+pytz==2024.2                   # Timezone handling
+aiofiles==24.1.0               # Async file I/O for audio processing
+tenacity==9.0.0                # Retry logic with exponential backoff
+celery==5.4.0                  # Async task queue for audio processing jobs
+redis==5.2.1                   # Redis broker for Celery task queue
+tqdm==4.67.1                   # Progress bars for long-running processes
+pyyaml==6.0.2                  # YAML config file parsing
+
+
+# ------------------------------------------------------------
+# 10. LOGGING & MONITORING
+# Structured logging and error tracking
+# ------------------------------------------------------------
+loguru==0.7.3                              # Beautiful structured logging
+sentry-sdk[fastapi]==2.19.2               # Error tracking and performance monitoring
+prometheus-fastapi-instrumentator==7.0.0  # Metrics endpoint for monitoring
+
+
+# ------------------------------------------------------------
+# 11. DEVELOPMENT & TESTING
+# Comment these out or remove in production deployment
+# ------------------------------------------------------------
+pytest==8.3.4                  # Testing framework
+pytest-asyncio==0.25.0         # Async test support for FastAPI
+pytest-cov==6.0.0              # Code coverage reports
+black==24.10.0                 # Code formatter (PEP 8 compliant)
+ruff==0.8.6                    # Fast Python linter
+mypy==1.14.1                   # Static type checker
+pre-commit==4.0.1              # Git hooks for code quality checks
+faker==33.1.0                  # Generate fake data for tests
+factory-boy==3.3.1             # Test fixtures and factories
+
+
+# ============================================================
+# SYSTEM DEPENDENCIES (install separately — NOT via pip)
+# ============================================================
+#   macOS:
+#     brew install ffmpeg
+#     brew install redis && brew services start redis
+#
+#   Ubuntu/Debian:
+#     sudo apt install ffmpeg redis-server
+# ============================================================
