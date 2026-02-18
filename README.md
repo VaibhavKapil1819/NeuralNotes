@@ -455,4 +455,4 @@ This project is licensed under the MIT License.
 
 ---
 
-<p align="center">Built with ❤️ by Naveen | NeuralNotes — Where meetings become knowledge</p>
+<p align="center">Built with ❤️ by Vaibhav | NeuralNotes — Where meetings become knowledge</p>
