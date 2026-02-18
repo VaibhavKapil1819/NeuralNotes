@@ -15,16 +15,13 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Constants ────────────────────────────────────────────────
 API_URL = "http://localhost:8000"
 
 # ── Custom CSS ───────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Main background */
-    .stApp { background-color: #0f1117; }
+    .stApp { background-color: #0f1117; color: #fff; }
 
-    /* Header */
     .nn-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 2rem;
@@ -35,7 +32,6 @@ st.markdown("""
     .nn-header h1 { color: white; font-size: 2.5rem; margin: 0; }
     .nn-header p  { color: rgba(255,255,255,0.85); font-size: 1.1rem; margin: 0.5rem 0 0 0; }
 
-    /* Metric cards */
     .metric-card {
         background: #1e2130;
         border: 1px solid #2d3250;
@@ -46,7 +42,6 @@ st.markdown("""
     .metric-value { font-size: 2rem; font-weight: bold; color: #667eea; }
     .metric-label { font-size: 0.85rem; color: #888; margin-top: 0.3rem; }
 
-    /* Meeting card */
     .meeting-card {
         background: #1e2130;
         border: 1px solid #2d3250;
@@ -57,6 +52,7 @@ st.markdown("""
     }
     .meeting-title { font-size: 1.1rem; font-weight: bold; color: #fff; }
     .meeting-meta  { font-size: 0.82rem; color: #888; margin-top: 0.3rem; }
+
     .tag {
         display: inline-block;
         background: #2d3250;
@@ -66,42 +62,54 @@ st.markdown("""
         font-size: 0.75rem;
         margin: 2px;
     }
-    .badge-positive { color: #4caf50; font-weight: bold; }
-    .badge-neutral  { color: #ffc107; font-weight: bold; }
-    .badge-negative { color: #f44336; font-weight: bold; }
 
-    /* Status pill */
-    .status-online  { color: #4caf50; font-weight: bold; }
-    .status-mock    { color: #ffc107; font-weight: bold; }
-
-    /* Action item */
-    .action-item {
-        background: #16213e;
+    .utterance-row {
+        background: #1a1d2e;
         border-radius: 8px;
-        padding: 0.6rem 1rem;
+        padding: 0.7rem 1rem;
         margin: 0.4rem 0;
-        font-size: 0.9rem;
+        border-left: 3px solid #667eea;
+    }
+    .utterance-time  { color: #667eea; font-size: 0.78rem; font-weight: bold; }
+    .utterance-speaker { color: #a78bfa; font-size: 0.82rem; font-weight: bold; }
+    .utterance-text  { color: #ddd; font-size: 0.92rem; margin-top: 0.2rem; }
+
+    .success-banner {
+        background: linear-gradient(135deg, #1a472a, #2d6a4f);
+        border: 1px solid #40916c;
+        border-radius: 10px;
+        padding: 1.2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-pill {
+        display: inline-block;
+        background: #2d3250;
+        color: #a78bfa;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        margin: 4px;
+        font-weight: bold;
     }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ── Helper Functions ─────────────────────────────────────────
+# ── Helpers ──────────────────────────────────────────────────
+def format_time(seconds: float) -> str:
+    """Convert seconds to MM:SS format for display."""
+    m, s = divmod(int(seconds), 60)
+    return f"{m:02d}:{s:02d}"
+
+
 def call_api(endpoint):
     try:
         r = requests.get(f"{API_URL}{endpoint}", timeout=3)
         return r.json()
     except Exception:
         return None
-
-
-def sentiment_badge(sentiment):
-    if sentiment == "positive":
-        return '<span class="badge-positive">😊 Positive</span>'
-    elif sentiment == "negative":
-        return '<span class="badge-negative">😟 Negative</span>'
-    else:
-        return '<span class="badge-neutral">😐 Neutral</span>'
 
 
 # ── Sidebar ──────────────────────────────────────────────────
@@ -112,32 +120,29 @@ with st.sidebar:
 
     page = st.radio(
         "Navigation",
-        ["🏠 Dashboard", "🎙️ New Meeting", "🔍 Ask NeuralNotes", "⚙️ System Status"],
+        ["🏠 Dashboard", "🎙️ Upload Meeting", "🔍 Ask NeuralNotes", "⚙️ System Status"],
         label_visibility="collapsed",
     )
 
     st.divider()
 
-    # API Health
     health = call_api("/health")
     if health:
         st.markdown("**API Status**")
-        st.markdown('<span class="status-online">🟢 Backend Online</span>', unsafe_allow_html=True)
+        st.markdown("🟢 Backend Online")
+        st.markdown(f"**Whisper:** {health['services']['whisper']}")
     else:
-        st.markdown("**API Status**")
-        st.error("🔴 Backend Offline\nRun: `uvicorn backend.main:app --reload`")
+        st.error("🔴 Backend Offline\n\nRun:\n`uvicorn backend.main:app --reload`")
 
     st.divider()
-    st.markdown("**Mock Mode** 🟡")
-    st.caption("Firebase & AI not connected yet.\nAll data is mock for now.")
+    st.caption("Phase 1 — Transcription ✅\nPhase 2 — AI Analysis 🔜\nPhase 3 — Dashboard 🔜\nPhase 4 — Q&A RAG 🔜\nPhase 5 — Integrations 🔜")
 
 
-# ── Pages ─────────────────────────────────────────────────────
-
-# ── Dashboard ───────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════
+# PAGE: DASHBOARD
+# ════════════════════════════════════════════════════════════
 if page == "🏠 Dashboard":
 
-    # Header
     st.markdown("""
     <div class="nn-header">
         <h1>🧠 NeuralNotes</h1>
@@ -145,170 +150,247 @@ if page == "🏠 Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
-    # Stats row
-    stats = call_api("/v1/stats")
-    if stats:
+    # Show last transcription result if stored in session
+    if "last_transcript" in st.session_state:
+        t = st.session_state["last_transcript"]
+        st.markdown("### 📋 Last Processed Meeting")
+        st.markdown(f"""
+        <div class="meeting-card">
+            <div class="meeting-title">📅 {t['title']}</div>
+            <div class="meeting-meta">
+                🎵 {t['filename']} &nbsp;|&nbsp;
+                ⏱️ {format_time(t['transcript']['duration_seconds'])} &nbsp;|&nbsp;
+                📝 {t['transcript']['word_count']} words &nbsp;|&nbsp;
+                🌐 {t['transcript']['language'].upper()}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("📄 View Full Transcript"):
+            st.session_state["view_transcript"] = True
+            st.session_state["page_override"] = "upload"
+            st.rerun()
+    else:
+        st.info("👆 No meetings yet! Go to **🎙️ Upload Meeting** to transcribe your first meeting.")
+
+    st.markdown("### 🚀 What NeuralNotes Does")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("""<div class="metric-card">
+            <div class="metric-value">🎙️</div>
+            <div class="metric-label">Transcribes audio with 95%+ accuracy</div>
+        </div>""", unsafe_allow_html=True)
+    with col2:
+        st.markdown("""<div class="metric-card">
+            <div class="metric-value">🧠</div>
+            <div class="metric-label">Summarizes with Claude AI (Phase 2)</div>
+        </div>""", unsafe_allow_html=True)
+    with col3:
+        st.markdown("""<div class="metric-card">
+            <div class="metric-value">✅</div>
+            <div class="metric-label">Extracts action items (Phase 2)</div>
+        </div>""", unsafe_allow_html=True)
+    with col4:
+        st.markdown("""<div class="metric-card">
+            <div class="metric-value">🔍</div>
+            <div class="metric-label">Q&A on meetings (Phase 4)</div>
+        </div>""", unsafe_allow_html=True)
+
+
+# ════════════════════════════════════════════════════════════
+# PAGE: UPLOAD MEETING
+# ════════════════════════════════════════════════════════════
+elif page == "🎙️ Upload Meeting":
+
+    # If viewing a transcript result
+    if st.session_state.get("view_transcript") and "last_transcript" in st.session_state:
+        data = st.session_state["last_transcript"]
+        transcript = data["transcript"]
+
+        # Success banner
+        st.markdown(f"""
+        <div class="success-banner">
+            <h3 style="color:#4caf50; margin:0">✅ Transcription Complete!</h3>
+            <p style="color:#ccc; margin:0.4rem 0 0 0">{data['title']} — {data['filename']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Stats row
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-value">{stats['total_meetings']}</div>
-                <div class="metric-label">Total Meetings</div>
+            st.markdown(f"""<div class="metric-card">
+                <div class="metric-value">{format_time(transcript['duration_seconds'])}</div>
+                <div class="metric-label">Duration</div>
             </div>""", unsafe_allow_html=True)
         with col2:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-value">{stats['total_hours_recorded']}h</div>
-                <div class="metric-label">Hours Recorded</div>
+            st.markdown(f"""<div class="metric-card">
+                <div class="metric-value">{transcript['word_count']}</div>
+                <div class="metric-label">Words</div>
             </div>""", unsafe_allow_html=True)
         with col3:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-value">{stats['total_action_items']}</div>
-                <div class="metric-label">Action Items</div>
+            st.markdown(f"""<div class="metric-card">
+                <div class="metric-value">{len(transcript['utterances'])}</div>
+                <div class="metric-label">Segments</div>
             </div>""", unsafe_allow_html=True)
         with col4:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-value">{stats['avg_meeting_duration_mins']}m</div>
-                <div class="metric-label">Avg Duration</div>
+            st.markdown(f"""<div class="metric-card">
+                <div class="metric-value">{data['processing']['processing_time_s']}s</div>
+                <div class="metric-label">Processing Time</div>
             </div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-    # Search
-    search = st.text_input("🔍 Search meetings...", placeholder="Type to search by title or topic")
+        # Tabs for different views
+        tab1, tab2 = st.tabs(["📝 Full Transcript", "🕐 Timestamped Segments"])
 
-    # Meeting list
-    st.markdown("### 📋 Recent Meetings")
+        with tab1:
+            st.markdown("### Full Transcript")
+            st.markdown(f"""
+            <div style="background:#1e2130; border-radius:10px; padding:1.5rem;
+                        line-height:1.8; color:#ddd; font-size:0.95rem;">
+                {transcript['full_text']}
+            </div>
+            """, unsafe_allow_html=True)
 
-    data = call_api("/v1/meetings")
-    if data and "meetings" in data:
-        meetings = data["meetings"]
-        if search:
-            meetings = [m for m in meetings if search.lower() in m["title"].lower()
-                        or any(search.lower() in t for t in m["tags"])]
+            # Copy button workaround
+            st.text_area("Copy transcript text:", transcript['full_text'], height=200)
 
-        if not meetings:
-            st.info("No meetings found matching your search.")
-        else:
-            for m in meetings:
-                tags_html = "".join([f'<span class="tag">#{t}</span>' for t in m["tags"]])
-                with st.container():
-                    st.markdown(f"""
-                    <div class="meeting-card">
-                        <div class="meeting-title">📅 {m['title']}</div>
-                        <div class="meeting-meta">
-                            🕐 {m['date'][:10]}  &nbsp;|&nbsp;
-                            ⏱️ {m['duration']}  &nbsp;|&nbsp;
-                            👥 {len(m['participants'])} participants &nbsp;|&nbsp;
-                            {sentiment_badge(m['sentiment'])}
-                        </div>
-                        <div style="margin-top: 0.6rem; color: #ccc; font-size: 0.9rem;">
-                            {m['summary']}
-                        </div>
-                        <div style="margin-top: 0.6rem;">{tags_html}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    with st.expander(f"📋 Action Items ({len(m['action_items'])})"):
-                        for item in m["action_items"]:
-                            st.markdown(f"""
-                            <div class="action-item">
-                                ☐ &nbsp;<b>{item['task']}</b><br>
-                                <span style="color:#888; font-size:0.8rem;">
-                                    👤 {item['assignee']} &nbsp;|&nbsp; 📅 Due: {item['due']}
-                                </span>
-                            </div>
-                            """, unsafe_allow_html=True)
-    else:
-        st.warning("Could not reach the backend API. Make sure it's running!")
-
-
-# ── New Meeting ──────────────────────────────────────────────
-elif page == "🎙️ New Meeting":
-    st.markdown("## 🎙️ Upload a Meeting")
-    st.caption("Upload an audio/video file to transcribe and analyze")
-
-    with st.form("upload_form"):
-        title = st.text_input("Meeting Title", placeholder="e.g. Q3 Planning Session")
-        participants = st.text_input("Participants (comma separated)", placeholder="alice@co.com, bob@co.com")
-        language = st.selectbox("Language", ["Auto Detect", "English", "Hindi", "Spanish", "French", "German"])
-        uploaded_file = st.file_uploader(
-            "Upload Audio/Video",
-            type=["mp3", "mp4", "wav", "m4a", "ogg", "webm"],
-            help="Max 500MB"
-        )
-        submit = st.form_submit_button("🚀 Process Meeting", use_container_width=True)
-
-        if submit:
-            if not uploaded_file:
-                st.error("Please upload an audio file first!")
-            else:
-                with st.spinner("Processing your meeting... (mock mode)"):
-                    import time
-                    time.sleep(2)
-                    result = requests.post(f"{API_URL}/v1/meetings/upload").json()
-
-                st.success("✅ Meeting received!")
-                st.json(result)
-                st.info("🟡 Mock mode: Real transcription will happen once Whisper is connected in Phase 1.")
-
-
-# ── Ask NeuralNotes ──────────────────────────────────────────
-elif page == "🔍 Ask NeuralNotes":
-    st.markdown("## 🔍 Ask NeuralNotes")
-    st.caption("Ask anything about your meetings in natural language")
-
-    data = call_api("/v1/meetings")
-    meetings = data["meetings"] if data else []
-    meeting_options = {m["title"]: m["id"] for m in meetings}
-
-    selected = st.selectbox("Select a meeting", list(meeting_options.keys()))
-    question = st.text_input("Your question", placeholder="What did we decide about the budget?")
-
-    if st.button("🧠 Ask", use_container_width=True):
-        if not question:
-            st.warning("Please type a question first!")
-        else:
-            with st.spinner("Searching through meeting knowledge..."):
-                import time
-                time.sleep(1)
-                result = requests.post(
-                    f"{API_URL}/v1/meetings/{meeting_options[selected]}/query"
-                ).json()
-
-            st.markdown("### 💡 Answer")
-            st.success(result["answer"])
-
-            st.markdown("### 📌 Source")
-            for src in result["sources"]:
+        with tab2:
+            st.markdown("### Timestamped Segments")
+            st.caption("Each segment shows exactly when it was spoken")
+            for utt in transcript['utterances']:
                 st.markdown(f"""
-                <div class="action-item">
-                    🗣️ <b>{src['speaker']}</b> at <b>{src['timestamp']}s</b><br>
-                    <i>"{src['text']}"</i>
+                <div class="utterance-row">
+                    <span class="utterance-time">⏱ {format_time(utt['start_time'])} → {format_time(utt['end_time'])}</span>
+                    &nbsp;&nbsp;
+                    <span class="utterance-speaker">🎙 {utt['speaker']}</span>
+                    <div class="utterance-text">{utt['text']}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
-            st.info("🟡 Mock mode: Real RAG-powered answers will work once Phase 4 is complete.")
+        st.markdown("<br>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Upload Another Meeting", use_container_width=True):
+                st.session_state.pop("view_transcript", None)
+                st.rerun()
+        with col2:
+            st.info("🔜 Phase 2: Claude will auto-generate summary & action items from this transcript!")
+
+    # Upload form
+    else:
+        st.markdown("## 🎙️ Upload a Meeting")
+        st.caption("Upload any audio or video file — NeuralNotes will transcribe it instantly")
+
+        with st.form("upload_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                title = st.text_input(
+                    "Meeting Title",
+                    placeholder="e.g. Q3 Planning Session"
+                )
+            with col2:
+                participants = st.text_input(
+                    "Participants (comma separated)",
+                    placeholder="alice@co.com, bob@co.com"
+                )
+
+            language = st.selectbox(
+                "Language",
+                ["auto", "en", "hi", "es", "fr", "de", "ja", "zh"],
+                format_func=lambda x: {
+                    "auto": "🌐 Auto Detect",
+                    "en": "🇺🇸 English",
+                    "hi": "🇮🇳 Hindi",
+                    "es": "🇪🇸 Spanish",
+                    "fr": "🇫🇷 French",
+                    "de": "🇩🇪 German",
+                    "ja": "🇯🇵 Japanese",
+                    "zh": "🇨🇳 Chinese",
+                }[x]
+            )
+
+            uploaded_file = st.file_uploader(
+                "Upload Audio / Video File",
+                type=["mp3", "mp4", "wav", "m4a", "ogg", "webm", "flac"],
+                help="Supported formats: MP3, MP4, WAV, M4A, OGG, WEBM, FLAC — Max 500MB"
+            )
+
+            submit = st.form_submit_button(
+                "🚀 Transcribe Meeting",
+                use_container_width=True
+            )
+
+            if submit:
+                if not uploaded_file:
+                    st.error("⚠️ Please upload an audio file first!")
+                elif not title.strip():
+                    st.error("⚠️ Please enter a meeting title!")
+                else:
+                    with st.spinner(f"🎙️ Transcribing '{title}'... this may take a moment"):
+                        try:
+                            response = requests.post(
+                                f"{API_URL}/v1/meetings/upload",
+                                files={"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)},
+                                data={
+                                    "title": title,
+                                    "participants": participants,
+                                    "language": language,
+                                },
+                                timeout=300,  # 5 min timeout for long audio
+                            )
+
+                            if response.status_code == 200:
+                                result = response.json()
+                                # Store result in session state
+                                st.session_state["last_transcript"] = result
+                                st.session_state["view_transcript"] = True
+                                st.rerun()
+                            else:
+                                st.error(f"❌ Error: {response.json().get('detail', 'Unknown error')}")
+
+                        except requests.exceptions.ConnectionError:
+                            st.error("❌ Cannot reach backend. Make sure it's running:\n`uvicorn backend.main:app --reload`")
+                        except Exception as e:
+                            st.error(f"❌ Something went wrong: {str(e)}")
 
 
-# ── System Status ────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════
+# PAGE: ASK NEURALNOTES
+# ════════════════════════════════════════════════════════════
+elif page == "🔍 Ask NeuralNotes":
+    st.markdown("## 🔍 Ask NeuralNotes")
+
+    st.info("🔜 Coming in **Phase 4** — RAG-powered Q&A. You'll be able to ask anything about any meeting and get instant answers with timestamps.")
+
+    st.markdown("### Preview of what's coming:")
+    st.markdown("""
+    ```
+    You:          "What did we decide about John Smith?"
+    NeuralNotes:  "The team decided to connect John with the guidance
+                   counselor and find childcare resources for his family."
+                   📍 Source: 01:09 — 01:31
+    ```
+    """)
+
+
+# ════════════════════════════════════════════════════════════
+# PAGE: SYSTEM STATUS
+# ════════════════════════════════════════════════════════════
 elif page == "⚙️ System Status":
     st.markdown("## ⚙️ System Status")
 
     health = call_api("/health")
     if health:
-        st.success("Backend API is reachable!")
-        st.markdown("### Service Health")
+        st.success("✅ Backend API is online!")
+        st.markdown("### Services")
         for service, status in health["services"].items():
             st.markdown(f"**{service.capitalize()}:** {status}")
     else:
-        st.error("Backend API is not reachable. Run: `uvicorn backend.main:app --reload`")
+        st.error("❌ Backend API is not reachable.\n\nRun: `uvicorn backend.main:app --reload --port 8000`")
 
     st.divider()
     st.markdown("### 📦 Build Info")
-    st.markdown(f"- **App Version:** 1.0.0")
-    st.markdown(f"- **Mode:** 🟡 Mock (Phase 0)")
+    st.markdown(f"- **App:** NeuralNotes v1.0.0")
+    st.markdown(f"- **Phase:** 1 — Transcription ✅")
     st.markdown(f"- **Time:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
-    st.markdown(f"- **Next Step:** Phase 1 — Wire up Whisper transcription")
+    st.markdown(f"- **Next:** Phase 2 — Claude AI Analysis")
