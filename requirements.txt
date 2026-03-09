@@ -72,7 +72,7 @@ pydub==0.25.1                  # Audio manipulation (split, convert, merge)
 ffmpeg-python==0.2.0           # Python wrapper for ffmpeg
 librosa==0.10.2                # Audio analysis and feature extraction
 soundfile==0.12.1              # Read/write audio files (WAV, FLAC, etc.)
-numpy==2.0.2                   # Numerical computing (audio arrays)
+numpy<2.0.0                    # Numerical computing (audio arrays)
 
 
 # ------------------------------------------------------------

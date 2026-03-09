@@ -2,11 +2,11 @@
 ### *Turn every conversation into intelligence*
 
 > An enterprise-grade AI Meeting Intelligence Platform that automatically records, transcribes, summarizes, and extracts actionable insights from meetings.
-
-![Python](https://img.shields.io/badge/Python-3.13+-blue?logo=python)
+![TypeScript](https://img.shields.io/badge/TypeScript-Auto-blue?logo=typescript)
+![Next.js](https://img.shields.io/badge/Next.js-15+-black?logo=nextdotjs)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Optional-38B2AC?logo=tailwindcss)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green?logo=fastapi)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.41-red?logo=streamlit)
-![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange?logo=firebase)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-orange?logo=firebase)
 ![Claude](https://img.shields.io/badge/AI-Claude%203.5-purple)
 ![Whisper](https://img.shields.io/badge/ASR-Whisper-yellow)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
@@ -24,21 +24,17 @@
 - [Environment Variables](#-environment-variables)
 - [Firebase Setup](#-firebase-setup)
 - [Running the App](#-running-the-app)
-- [API Documentation](#-api-documentation)
-- [Development Guide](#-development-guide)
-- [Roadmap](#-roadmap)
 
 ---
 
 ## 🤔 What is NeuralNotes?
 
-NeuralNotes is an AI-powered meeting intelligence platform that eliminates manual note-taking forever. Upload any meeting recording or record live — NeuralNotes handles the rest:
+NeuralNotes is an enterprise-grade AI meeting intelligence platform that eliminates manual note-taking. Built with a modern **Next.js 15** frontend and a high-performance **FastAPI** backend, it handles the end-to-end meeting lifecycle:
 
-- 🎙️ **Transcribes** audio with speaker labels using OpenAI Whisper
-- 🧠 **Summarizes** meetings and extracts action items using Claude AI
-- 🔍 **Answers questions** about any meeting using RAG (e.g. *"What did we decide about the budget?"*)
-- 📧 **Emails** formatted summaries to all participants automatically
-- 📊 **Tracks** all your meetings in a beautiful searchable dashboard
+- 🎙️ **Transcribes** audio with 95%+ accuracy using OpenAI Whisper.
+- 🧠 **Summarizes** meetings and extracts action items using Claude 3.5 Sonnet.
+- 🔍 **Intelligent Q&A** ask anything about your meeting history via RAG.
+- 🛡️ **Secure** production-ready authentication via Firebase Auth (Google & Email).
 
 ---
 
@@ -46,16 +42,13 @@ NeuralNotes is an AI-powered meeting intelligence platform that eliminates manua
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| Audio Upload | MP3, MP4, WAV, M4A support up to 500MB | ✅ Phase 1 |
-| Transcription | Whisper-powered with 95%+ accuracy | ✅ Phase 1 |
-| Smart Summary | AI-generated structured meeting summary | ✅ Phase 2 |
-| Action Items | Auto-extracted tasks with assignees & deadlines | ✅ Phase 2 |
-| Speaker Labels | Identify who said what (diarization) | ✅ Phase 2 |
-| Meeting Dashboard | Searchable history of all meetings | ✅ Phase 3 |
-| Q&A on Meetings | Ask anything, get answers with timestamps | ✅ Phase 4 |
-| Email Summaries | Auto-send to participants via SendGrid | ✅ Phase 5 |
-| Slack Integration | Post summaries to channels | 🔄 Phase 5 |
-| Multi-language | Support for 10+ languages | 🔄 Phase 5 |
+| Audio Upload | Drag-and-drop support for MP3, WAV, M4A | ✅ Phase 1 |
+| Transcription | Whisper-powered with speaker identification | ✅ Phase 1 |
+| Premium UI | Dark mode, glassmorphism, responsive Next.js app | ✅ Phase 1 |
+| Full Auth | Secure login/register with Google & Email | ✅ Phase 1 |
+| Smart Summary | AI-generated structured analysis | ✅ Phase 2 |
+| Action Items | Auto-extracted tasks and decisions | ✅ Phase 2 |
+| Dashboard | Searchable meeting library | 🔄 Phase 3 |
 
 ---
 
@@ -63,55 +56,24 @@ NeuralNotes is an AI-powered meeting intelligence platform that eliminates manua
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      CLIENT LAYER                           │
-│              Streamlit Web UI  (port 8501)                  │
+│                      FRONTEND LAYER                         │
+│              Next.js 15 App (port 3000)                     │
+│         Firebase Client SDK │ AuthContext │ React           │
 └───────────────────────────┬─────────────────────────────────┘
-                            │ HTTP/REST
+                            │ Secure REST API (JWT)
 ┌───────────────────────────▼─────────────────────────────────┐
-│                     API GATEWAY                             │
-│              FastAPI Backend  (port 8000)                   │
-│         Auth │ Rate Limiting │ CORS │ Routing               │
+│                     BACKEND SERVICE                         │
+│              FastAPI Backend (port 8000)                    │
+│         Firebase Admin SDK │ Auth Middleware │ Pydantic     │
 └──────┬──────────────┬───────────────────┬───────────────────┘
        │              │                   │
 ┌──────▼──────┐ ┌─────▼──────┐ ┌─────────▼──────┐
-│   Audio     │ │    AI      │ │  Integration   │
-│  Service    │ │  Service   │ │   Service      │
+│   Audio     │ │    AI      │ │  Persistence   │
+│  Service    │ │  Service   │ │    Layer       │
 │             │ │            │ │                │
-│ ffmpeg      │ │ Whisper    │ │ SendGrid       │
-│ pydub       │ │ Claude API │ │ Slack          │
-│ pyannote    │ │ ChromaDB   │ │ Google Cal     │
-└──────┬──────┘ └─────┬──────┘ └────────────────┘
-       │              │
-┌──────▼──────────────▼───────────────────────────────────────┐
-│                      DATA LAYER                             │
-│  Firebase Firestore   │   ChromaDB        │  Firebase       │
-│  (meetings, users)    │   (embeddings)    │  Storage        │
-│                       │   (RAG Q&A)       │  (audio files)  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Request Flow (Meeting Upload)
-
-```
-User uploads audio
-      ↓
-FastAPI receives file → validates size & format
-      ↓
-Audio Service → ffmpeg converts to 16kHz WAV
-      ↓
-Whisper Engine → transcribes audio to text
-      ↓
-Speaker Engine → diarization (who said what)
-      ↓
-Claude Engine → summary + action items + decisions
-      ↓
-Vector Store → chunk & embed transcript for Q&A
-      ↓
-Firebase Firestore → save all results
-      ↓
-SendGrid → email summary to participants
-      ↓
-Streamlit UI → display results to user
+│ Whisper     │ │ Claude 3.5 │ │ Firestore      │
+│ ffmpeg      │ │ ChromaDB   │ │ Firebase Store │
+└──────┴──────┘ └─────┬──────┘ └────────────────┘
 ```
 
 ---
@@ -120,21 +82,15 @@ Streamlit UI → display results to user
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| Language | Python 3.13+ | Core language |
-| Web Framework | FastAPI | REST API backend |
-| Frontend | Streamlit | Web dashboard UI |
-| Transcription | OpenAI Whisper | Speech to text |
-| LLM | Anthropic Claude 3.5 | Summarization & Q&A |
-| Diarization | pyannote.audio | Speaker identification |
-| Vector DB | ChromaDB | RAG-based Q&A |
-| Database | Firebase Firestore | Cloud NoSQL database |
-| Storage | Firebase Storage | Audio file storage |
-| Auth | Firebase Auth | User authentication |
-| Email | SendGrid | Meeting summary emails |
-| Notifications | Slack SDK | Slack integration |
-| Audio | ffmpeg + pydub | Audio processing |
-| Task Queue | Celery + Redis | Async job processing |
-| Monitoring | Loguru + Sentry | Logging & error tracking |
+| Frontend | Next.js 15 (App Router) | Modern, fast web UI |
+| Styling | Vanilla CSS / CSS Modules | Premium, custom design |
+| Auth | Firebase Auth | Secure multi-provider login |
+| Backend | FastAPI | High-performance Python API |
+| Transcription | OpenAI Whisper | Local/Cloud speech-to-text |
+| LLM | Anthropic Claude 3.5 | Summarization & Insights |
+| Database | Firebase Firestore | NoSQL Real-time database |
+| Storage | Firebase Storage | Meeting audio persistence |
+| Vector DB | ChromaDB | RAG-based search & Q&A |
 
 ---
 
@@ -142,66 +98,19 @@ Streamlit UI → display results to user
 
 ```
 neuralnotes/
-│
-├── backend/                        # FastAPI backend
-│   ├── main.py                     # App entry point, routes registration
-│   ├── config/
-│   │   ├── settings.py             # All env variables loaded here
-│   │   └── firebase.py             # Firebase initialization
-│   ├── routes/
-│   │   ├── auth.py                 # /auth/* endpoints
-│   │   ├── meetings.py             # /meetings/* endpoints
-│   │   └── query.py                # /query/* endpoints (RAG)
-│   ├── services/
-│   │   ├── audio_service.py        # Audio processing logic
-│   │   ├── ai_service.py           # Claude API calls
-│   │   ├── email_service.py        # SendGrid email sending
-│   │   └── firebase_service.py     # Firestore CRUD operations
-│   ├── models/
-│   │   ├── meeting.py              # Meeting Pydantic models
-│   │   ├── user.py                 # User Pydantic models
-│   │   └── analysis.py             # Analysis Pydantic models
-│   ├── middleware/
-│   │   └── auth_middleware.py      # JWT validation middleware
-│   └── utils/
-│       └── helpers.py              # Shared utility functions
-│
-├── ai_pipeline/                    # AI/ML pipeline
-│   ├── transcription/
-│   │   └── whisper_engine.py       # Whisper transcription
-│   ├── diarization/
-│   │   └── speaker_engine.py       # Speaker diarization
-│   ├── analysis/
-│   │   └── claude_engine.py        # Claude summarization
-│   └── rag/
-│       ├── vector_store.py         # ChromaDB operations
-│       └── query_engine.py         # RAG Q&A engine
-│
-├── frontend/                       # Streamlit UI
-│   ├── app.py                      # Main Streamlit entry point
-│   ├── pages/
-│   │   ├── login.py                # Login / Register page
-│   │   ├── dashboard.py            # Meeting history dashboard
-│   │   └── meeting_detail.py       # Individual meeting view
-│   └── components/
-│       └── meeting_card.py         # Reusable meeting card component
-│
-├── tests/                          # Test suite
-│   ├── unit/                       # Unit tests
-│   └── integration/                # Integration tests
-│
-├── docs/                           # Additional documentation
-├── temp/                           # Temporary audio files (gitignored)
-├── chroma_db/                      # ChromaDB local storage (gitignored)
-│
-├── .env                            # Your secrets (never commit this!)
-├── .env.example                    # Template — safe to commit
-├── .gitignore                      # Git ignore rules
-├── requirements.txt                # Python dependencies
-├── setup.sh                        # One-command setup script
-├── Dockerfile                      # Docker container config
-├── docker-compose.yml              # Multi-service Docker setup
-└── README.md                       # You are here!
+├── frontend/                # Next.js 15 Application
+│   ├── src/app/             # Pages & Layouts
+│   ├── src/context/         # AuthContext state
+│   ├── src/lib/             # Firebase SDK init
+│   └── src/components/      # UI components
+├── backend/                 # FastAPI API
+│   ├── config/              # firebase_admin & settings
+│   ├── middleware/          # JWT validation logic
+│   └── routes/              # Meeting & Auth endpoints
+├── ai_pipeline/             # ML core
+│   ├── transcription/       # Whisper engine
+│   └── analysis/            # Claude integration
+└── requirements.txt         # Backend dependencies
 ```
 
 ---
@@ -265,6 +174,10 @@ uvicorn backend.main:app --reload --port 8000
 
 # Terminal 2 — Start frontend
 streamlit run frontend/app.py
+
+or 
+python -m streamlit run frontend/app.py
+
 ```
 
 Open your browser:

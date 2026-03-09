@@ -10,6 +10,7 @@ from loguru import logger
 from datetime import datetime
 from backend.config.settings import settings
 from backend.routes.meetings import router as meetings_router
+from backend.routes.auth import router as auth_router
 
 
 # ── Lifespan: runs on startup and shutdown ───────────────────
@@ -24,9 +25,13 @@ async def lifespan(app: FastAPI):
     logger.info(f"Environment: {settings.APP_ENV}")
     logger.info(f"Whisper model: {settings.WHISPER_MODEL}")
 
+    # Initialize Firebase
+    from backend.config.firebase import initialize_firebase
+    initialize_firebase()
+
     # Pre-load Whisper model so first request is fast
-    from ai_pipeline.transcription.whisper_engine import whisper_engine
-    whisper_engine.load_model()
+    # from ai_pipeline.transcription.whisper_engine import whisper_engine
+    # whisper_engine.load_model()
 
     logger.success("✅ NeuralNotes is ready!")
     yield   # App runs here
@@ -46,16 +51,21 @@ app = FastAPI(
 )
 
 # ── CORS Middleware ──────────────────────────────────────────
+# Split allowed origins by comma if multiple are provided
+origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.ALLOWED_ORIGINS],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ── Register Routers ─────────────────────────────────────────
-app.include_router(meetings_router)
+app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(meetings_router, prefix=settings.API_V1_STR)
+
 
 
 # ── Health Check ─────────────────────────────────────────────

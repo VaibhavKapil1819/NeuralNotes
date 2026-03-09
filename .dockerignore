@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+temp/
+chroma_db/
+firebase_credentials.json
+frontend/
+.github/
+.git/
